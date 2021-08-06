@@ -7,7 +7,7 @@ A little `Choose you own adventure` library. The basic idea of this implementati
 - create a node enum for whatever custom stuff you want to implement
 - create a tree class to handle your custom nodes
 - start listening for events
-- call `tree.process()` to run the logic
+- call `YourTreeClass.process()` to run the logic
 
 ```haxe
 import cyoa.Events;
@@ -21,7 +21,7 @@ enum SomeCustomNode {
 }
 
 class SayEvent extends Event {
-	public static inline final Id = 'my-custom-say-event';
+    public static inline final Id = 'my-custom-say-event';
 
     public var char: String;
     public var text: String;
@@ -35,8 +35,8 @@ class SayEvent extends Event {
 class CustomTree extends Tree<SomeCustomNode, Context> {
     final say_event = new SayEvent();
 
-	override function evalCustomNode( node: SomeCustomNode, ctx: Context, nodeKey: String ) : NodeStatus {
-		switch node {
+    override function evalCustomNode( node: SomeCustomNode, ctx: Context, nodeKey: String ) : NodeStatus {
+        switch node {
             case Say(char, text, format):
                 say_event.char = char;
                 say_event.text = text;
@@ -95,17 +95,17 @@ function process_tree( ctx ) {
 function on_story_event( event: cyoa.Event ) {
     switch event.type {
         case NarrationEvent.Id:
-			final n: NarrationEvent = cast event;
+            final n: NarrationEvent = cast event;
             // add some line of text to your scene
 
         case MultipleChoiceEvent.Id:
-			final mc: MultipleChoiceEvent = cast event;
+            final mc: MultipleChoiceEvent = cast event;
 
             // add a button for each `mc.item`
             for (item in mc.items) {
                 add_some_button(item.text, function on_click() {
                     ctx.choice_results.set(mc.key, Some(item.index));
-                    process_tree();
+                    process_tree(ctx);
                 });
             }
 
