@@ -53,7 +53,7 @@ class Tree<NODE, CONTEXT: Context> {
 	}
 
 	function evalCustomNode( node: NODE, ctx: CONTEXT, nodeKey: String ) : NodeStatus {
-		log('evalCustomNode() is not overridden');
+		log(ctx, 'evalCustomNode() is not overridden');
 		return Failure;
 	}
 
@@ -102,9 +102,9 @@ class Tree<NODE, CONTEXT: Context> {
 
 	var _indent = 0;
 
-	function log( msg: String ) {
+	function log( ctx: CONTEXT, msg: String ) {
 		final pad = StringTools.lpad('', ' ', _indent);
-		trace('$pad$msg');
+		ctx.log('$pad$msg');
 	}
 
 	function eval( node: Node<NODE>, ctx: CONTEXT, nodeKey: String ) : NodeStatus {
@@ -117,7 +117,7 @@ class Tree<NODE, CONTEXT: Context> {
 	function _eval( node: Node<NODE>, ctx: CONTEXT, nodeKey: String ) : NodeStatus {
 		switch node {
 			case Sequence(nodes):
-				log('sequence($nodeKey)');
+				log(ctx, 'sequence($nodeKey)');
 
 				final last = get_node_index(ctx, nodeKey);
 
@@ -130,21 +130,21 @@ class Tree<NODE, CONTEXT: Context> {
 
 						case Running:
 							set_node_index(ctx, nodeKey, i);
-							log('/sequence($nodeKey)[$i] => $r');
+							log(ctx, '/sequence($nodeKey)[$i] => $r');
 							return r;
 
 						case Failure:
 							set_node_index(ctx, nodeKey, nodes.length);
-							log('/sequence($nodeKey)[$i] => $r');
+							log(ctx, '/sequence($nodeKey)[$i] => $r');
 							return update_node_status(ctx, nodeKey, r);
 					}
 				}
 
-				log('/sequence($nodeKey) => Success');
+				log(ctx, '/sequence($nodeKey) => Success');
 				return update_node_status(ctx, nodeKey, Success);
 
 			case Selector(nodes):
-				log('selector($nodeKey)');
+				log(ctx, 'selector($nodeKey)');
 				final last = get_node_index(ctx, nodeKey);
 
 				for (i in last...nodes.length) {
@@ -154,56 +154,56 @@ class Tree<NODE, CONTEXT: Context> {
 					switch r {
 						case Success:
 							set_node_index(ctx, nodeKey, nodes.length);
-							log('/selector($nodeKey)[$i] => $r');
+							log(ctx, '/selector($nodeKey)[$i] => $r');
 							return update_node_status(ctx, nodeKey, r);
 
 						case Running:
 							set_node_index(ctx, nodeKey, i);
-							log('/selector($nodeKey)[$i] => $r');
+							log(ctx, '/selector($nodeKey)[$i] => $r');
 							return r;
 
 						case Failure:
 					}
 				}
 
-				log('/selector($nodeKey) => Failure');
+				log(ctx, '/selector($nodeKey) => Failure');
 				return update_node_status(ctx, nodeKey, Failure);
 
 			// case Chance(probability):
 			// 	final r: StoryStatus = Math.random() <= probability ? Success : Failure;
-			// 	log(':CHANCE($nodeKey) probability=$probability $r');
+			// 	log(ctx, ':CHANCE($nodeKey) probability=$probability $r');
 			// 	return r;
 
 			case Goto(key):
-				log('goto($nodeKey) key=$key');
+				log(ctx, 'goto($nodeKey) key=$key');
 				final next = nodes.exists(key);
 
 				if (next) {
 					setNextRoot(Some(key));
-					log('/goto($nodeKey) key=$key => Success');
+					log(ctx, '/goto($nodeKey) key=$key => Success');
 					return Success;
 				}
 
-				log('/GOTO($nodeKey) key=$key => Failure');
+				log(ctx, '/GOTO($nodeKey) key=$key => Failure');
 				return Failure;
 
 			case End:
-				log(':end($nodeKey)');
+				log(ctx, ':end($nodeKey)');
 				return Success;
 
 			case SetVariable(key, value):
-				log(':set_variable($nodeKey) key=$key value=$value');
+				log(ctx, ':set_variable($nodeKey) key=$key value=$value');
 				ctx.state.set(key, value);
 				return Success;
 
 			case HasVariable(key):
 				final r: NodeStatus = ctx.state.exists(key) ? Success : Failure;
-				log(':has_variable($nodeKey) key=$key => $r');
+				log(ctx, ':has_variable($nodeKey) key=$key => $r');
 				return r;
 
 			case CompareVariable(key, value):
 				final r: NodeStatus = ctx.state.get(key) == value ? Success : Failure;
-				log(':compare_variable($nodeKey) key=$key value=$value => $r');
+				log(ctx, ':compare_variable($nodeKey) key=$key value=$value => $r');
 				return r;
 
 			case Narrate(text, format):
@@ -214,7 +214,7 @@ class Tree<NODE, CONTEXT: Context> {
 
 			case MultipleChoice(key, choices):
 				if (!ctx.choice_results.exists(key)) {
-					log('multiple_choice($nodeKey) key=$key');
+					log(ctx, 'multiple_choice($nodeKey) key=$key');
 					final last = get_node_index(ctx, nodeKey);
 					var itemIndex = 0;
 
@@ -235,7 +235,7 @@ class Tree<NODE, CONTEXT: Context> {
 
 					ctx.choice_results.set(key, None);
 					dispatch(present_multiple_choice_event);
-					log('multiple_choice($nodeKey) key=$key => Running');
+					log(ctx, 'multiple_choice($nodeKey) key=$key => Running');
 					return Running;
 				} else {
 					final r = ctx.choice_results.get(key);
@@ -269,7 +269,7 @@ class Tree<NODE, CONTEXT: Context> {
 					case Some(index): index == value ? Success : Failure;
 				}
 
-				log(':chose($nodeKey) key=$key value=$value => $r');
+				log(ctx, ':chose($nodeKey) key=$key value=$value => $r');
 				return r;
 
 			case Custom(node):
