@@ -13,10 +13,12 @@ class Tree<NODE, CONTEXT: Context> {
 
 	var listeners: Array<Event -> Void> = []; // TODO (DK) move into Context?
 
+	final logFn: String -> Void;
 	final narrate_event = new NarrationEvent();
 	final present_multiple_choice_event = new MultipleChoiceEvent();
 
-	public function new() {
+	public function new( logFn ) {
+		this.logFn = logFn;
 	}
 
 	public function init( nodes, rootKey: String ) {
@@ -104,7 +106,7 @@ class Tree<NODE, CONTEXT: Context> {
 
 	function log( ctx: CONTEXT, msg: String ) {
 		final pad = StringTools.lpad('', ' ', _indent);
-		ctx.log('$pad$msg');
+		logFn('$pad$msg');
 	}
 
 	function eval( node: Node<NODE>, ctx: CONTEXT, nodeKey: String ) : NodeStatus {
