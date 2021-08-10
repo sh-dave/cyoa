@@ -20,6 +20,23 @@ class Context {
 		choice_results.set(key, Some(value));
 	}
 
+	public function suspend() {
+		// node_status.clear();
+		// indices.clear();
+
+		final removable = [];
+
+		for (id => r in choice_results) {
+			if (r == None) {
+				removable.push(id);
+			}
+		}
+
+		for (r in removable) {
+			choice_results.remove(r);
+		}
+	}
+
 	public function clear() {
 		currentKey = null;
 		state.clear();
