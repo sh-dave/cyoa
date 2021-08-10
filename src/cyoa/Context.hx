@@ -1,6 +1,10 @@
 package cyoa;
 
+import haxe.ds.Option;
+
 class Context {
+	public var currentKey: String;
+
 	public final state: Map<String, String> = [];
 	// TODO (DK) remove the Option, use -1?
 	//	also make it an Map<String, Array<Int>> so we can query the number of times a choice was selected?
@@ -12,7 +16,12 @@ class Context {
 	public function new() {
 	}
 
+	public function selectChoice( key: String, value: Int ) {
+		choice_results.set(key, Some(value));
+	}
+
 	public function clear() {
+		currentKey = null;
 		state.clear();
 		choice_results.clear();
 		indices.clear();

@@ -6,13 +6,10 @@ import cyoa.Events;
 // TODO (DK) remove `CONTEXT`?
 class Tree<NODE, CONTEXT: Context> {
 	var nodes: Map<String, Node<NODE>>;
-	var root: Node<NODE>;
 	var current: Node<NODE>;
-	var currentKey: String; // TODO (DK) move into context?
 	var nextRootKey: Option<String> = None;
 
-	var listeners: Array<Event -> Void> = []; // TODO (DK) move into Context?
-
+	final listeners: Array<Event -> Void> = [];
 	final logFn: String -> Void;
 	final narrate_event = new NarrationEvent();
 	final present_multiple_choice_event = new MultipleChoiceEvent();
@@ -21,10 +18,10 @@ class Tree<NODE, CONTEXT: Context> {
 		this.logFn = logFn;
 	}
 
-	public function init( nodes, rootKey: String ) {
+	public function init( ctx: CONTEXT, nodes ) {
 		this.nodes = nodes;
-		this.currentKey = rootKey;
-		this.root = this.current = nodes.get(rootKey);
+		this.current = nodes.get(ctx.currentKey);
+		this.nextRootKey = None;
 	}
 
 	public function listen( fn: Event -> Void ) {
@@ -60,7 +57,7 @@ class Tree<NODE, CONTEXT: Context> {
 	}
 
 	public function process( ctx: CONTEXT ) {
-		final r = eval(current, ctx, currentKey);
+		final r = eval(current, ctx, ctx.currentKey);
 
 		switch nextRootKey {
 			case None:
@@ -68,7 +65,7 @@ class Tree<NODE, CONTEXT: Context> {
 
 			case Some(key):
 				final next = nodes.get(key);
-				currentKey = key;
+				ctx.currentKey = key;
 				current = next;
 				nextRootKey = None;
 				// TODO (DK) should we clear all other maps/arrays as well?
