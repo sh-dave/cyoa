@@ -1,18 +1,18 @@
 package cyoa;
 
-enum NodeStatus {
+enum abstract NodeStatus(Int) {
 	/**
 	 * The node failed.
 	 */
-	Failure;
+	final Failure;
 
 	/**
 	 * The node is running (it may be waiting for input).
 	 */
-	Running;
+	final Running;
 
 	/**
 	 * The node completed successfully.
 	 */
-	Success;
+	final Success;
 }

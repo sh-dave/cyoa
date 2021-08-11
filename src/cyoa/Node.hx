@@ -57,11 +57,6 @@ enum Node<T> {
 	MultipleChoice( key: String, choices: Array<MultipleChoiceAnswer<T>> );
 
 	/**
-	 * Was option `choice` selected?
-	 */
-	Chose( key: String, choice: Int );
-
-	/**
 	 * Goto another node identified by `key`.
 	 */
 	Goto( key: String );
@@ -75,4 +70,9 @@ enum Node<T> {
 	 * Allow customization.
 	 */
 	Custom( node: T );
+
+	/**
+	 * Was option `choice` during `run` selected?
+	 */
+	Internal_Chose( key: String, run: Int, choice: Int );
 }
