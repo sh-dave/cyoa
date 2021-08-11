@@ -11,14 +11,33 @@ enum Node<T> {
 	/**
 	 * A sequence of nodes. It's stateful and keeps track of `Running` children.
 	 * Stops iteration and fails as soon as the first child fails; succeeds when all children succeed.
+	 *
+	 * example:
+	 *
+	 * Sequence([
+	 * 		Narrate("Wall of text."),
+	 * 		Narrate("Even more wall of text."),
+	 * 		Sequence([
+	 * 			Narrate("Nested, but quite useless"),
+	 * 		]),
+	 * 		Goto(""),
+	 * ])
 	 */
 	Sequence( nodes: Array<Node<T>> );
 
 	/**
 	 * A selector. It's stateful and keeps track of `Running` children.
 	 * Stops iteration as soon as the first child succeeds; fails when all children fail.
+	 *
+	 * example:
+	 *
+	 * Selector([
+	 * 		Sequence([HasVariable("test1"), Goto("passage-test1")]),
+	 * 		Sequence([CompareVariable("test2", "5"), Goto("passage-test2-mode5")]),
+	 * 		Goto("passage-untested"),
+	 * ])
 	 */
-	Selector( nodes: Array<Node<T>> );
+	 Selector( nodes: Array<Node<T>> );
 
 	/**
 	 * Succeeds when RNG roll is equal or less than `probability`

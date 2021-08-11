@@ -1,17 +1,21 @@
 # cyoa
 
-A little `Choose you own adventure` library. The basic idea is modeled after behavior trees.
+A little `Choose Your Own Adventure` / narrative library (think [ink](https://github.com/inkle/ink)). The basic idea is modeled after behavior trees.
 
 ## builtin features
 
 - text output ... obviously
 - multiple choices
+- conditional logic
 - variables you can set and query
-- suspend/resume a story
+- suspending/resuming a story
   - replays the whole story when you resume to rebuild your scene
   - automatically choose all multiple-choice answers
   - triggers all events again
-- easy customization to add whatever logic nodes you desire
+  - state loading/saving is not provided, but it's easy to do: just serialize the whole `Context` class
+- easily extensible to add whatever custom logic you need
+  - just provide an enum with nodes
+  - extend the tree class with your logic
 
 ## usage
 
