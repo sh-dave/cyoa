@@ -2,7 +2,7 @@ package cyoa;
 
 class MultipleChoiceEntry {
 	public var run = 0;
-	// TODO (DK) just use an Array<Int> instead (index == run)
+	// TODO (DK) just use an Array<Int> instead (index == run)?
 	public var selection: Map<Int, Int> = []; // <run, answer>
 
 	public function new() {

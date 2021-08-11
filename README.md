@@ -1,6 +1,17 @@
 # cyoa
 
-A little `Choose you own adventure` library. The basic idea of this implementation is actually to behave kinda like behavior trees.
+A little `Choose you own adventure` library. The basic idea is modeled after behavior trees.
+
+## builtin features
+
+- text output ... obviously
+- multiple choices
+- variables you can set and query
+- suspend/resume a story
+  - replays the whole story when you resume to rebuild your scene
+  - automatically choose all multiple-choice answers
+  - triggers all events again
+- easy customization to add whatever logic nodes you desire
 
 ## usage
 
