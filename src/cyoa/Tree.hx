@@ -271,6 +271,8 @@ class Tree<NODE, CONTEXT: Context> {
 					ctx.choice_results.set(key, entry = new MultipleChoiceEntry());
 					entry.run = 0;
 					entry.selection.set(0, -1);
+				} else if (!entry.selection.exists(entry.run)) {
+					entry.selection.set(entry.run, -1);
 				}
 
 				final selected = entry.selection.get(entry.run);
@@ -300,12 +302,12 @@ class Tree<NODE, CONTEXT: Context> {
 					return Running;
 				} else {
 					final run = entry.run;
-					final answer = entry.selection.get(run);
+					// final answer = entry.selection.get(run);
 					entry.run += 1;
 
 					final r = _eval(Selector([
 						for (i in 0...choices.length)
-							Sequence([Node.Internal_Chose(key, run, answer), choices[i].next])
+							Sequence([Node.Internal_Chose(key, run, i), choices[i].next])
 					]), ctx, nodeKey); // TODO (DK) is nodekey correct here?
 
 					return r;
