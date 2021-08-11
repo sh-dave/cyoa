@@ -10,6 +10,7 @@ class MultipleChoiceEntry {
 }
 
 class Context {
+	public var rootKey: String;
 	public var currentKey: String;
 
 	public final state: Map<String, String> = [];

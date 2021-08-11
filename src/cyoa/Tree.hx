@@ -21,11 +21,11 @@ class Tree<NODE, CONTEXT: Context> {
 	}
 
 	/**
-	 * Inject the node tree. It will jump to node set int `ctx.currentKey`.
+	 * Inject the node tree. It will jump to node set int `ctx.rootKey`.
 	 */
 	public function init( ctx: CONTEXT, nodes ) {
 		this.nodes = nodes;
-		this.current = nodes.get(ctx.currentKey);
+		this.current = nodes.get(ctx.currentKey = ctx.rootKey);
 		this.nextRootKey = None;
 	}
 
