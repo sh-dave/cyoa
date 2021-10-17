@@ -40,22 +40,12 @@ enum Node<T> {
 	 Selector( nodes: Array<Node<T>> );
 
 	/**
-	 * Succeeds when RNG roll is equal or less than `probability`
-	 * @param probability - in the range of 0.0 ... 1.0
-	 */
-	// Chance( probability: Float );
-
-	// SetCounter( key: String, value: Float );
-	// AddCounter( key: String, value: Float );
-	// MatchCounter( key: String, op: CounterOp, value: Float );
-
-	/**
 	 * Store a state variable.
 	 */
 	SetVariable( key: String, value: String );
 
 	/**
-	 * Test if a stored variable matches `value`.
+	 * Test if a variable matches `value`.
 	 */
 	CompareVariable( key: String, value: String );
 
@@ -71,7 +61,7 @@ enum Node<T> {
 	Narrate( text: String, ?format: String );
 
 	/**
-	 * Present multiple choices to the reader.
+	 * Present multiple choices.
 	 */
 	MultipleChoice( key: String, choices: Array<MultipleChoiceAnswer<T>> );
 

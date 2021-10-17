@@ -4,28 +4,38 @@ import haxe.ds.Option;
 import cyoa.Context;
 import cyoa.Events;
 
-// TODO (DK) remove `CONTEXT`?
+enum SuspendMode {
+	EveryNode;
+	FirstNarrationAfterChoice;
+}
+
 class Tree<NODE, CONTEXT: Context> {
 	var nodes: Map<String, Node<NODE>>;
 	var current: Node<NODE>;
 	var nextRootKey: Option<String> = None;
+	var savedKey: String;
+
+	final suspendMode: SuspendMode;
+	var saveNextKey = false;
 
 	final listeners: Array<Event -> Void> = [];
-	final logFn: String -> Void;
 	final narrate_event = new NarrationEvent();
-	final present_multiple_choice_event = new MultipleChoiceEvent();
+	final present_choice_event = new ChoiceEvent();
+
+	final logFn: String -> Void;
 	var _indent = 0;
 
-	public function new( logFn ) {
+	public function new( logFn, suspendMode: SuspendMode ) {
 		this.logFn = logFn;
+		this.suspendMode = suspendMode;
 	}
 
 	/**
-	 * Inject the node tree. It will jump to node set int `ctx.rootKey`.
+	 * Inject the node tree. It will jump to the node `ctx.rootKey`.
 	 */
 	public function init( ctx: CONTEXT, nodes ) {
 		this.nodes = nodes;
-		this.current = nodes.get(ctx.currentKey = ctx.rootKey);
+		this.current = nodes.get(savedKey = ctx.currentKey = ctx.rootKey);
 		this.nextRootKey = None;
 	}
 
@@ -57,8 +67,9 @@ class Tree<NODE, CONTEXT: Context> {
 		final entry = ctx.choice_results.get(key);
 
 		if (entry != null) {
+			saveNextKey = true;
 			entry.selection.set(entry.run, answer);
-			return Success;// process(ctx);
+			return Success;
 		} else {
 			log('[ERROR] answer for key=$key not found');
 			return Failure;
@@ -70,9 +81,12 @@ class Tree<NODE, CONTEXT: Context> {
 	 *
 	 * You should new serialize the whole `ctx` object.
 	 * To resume the story, deserialize the `ctx` object and just call `process()`.
-	 * This will run the whole story and automatically reselect your choices until the point you stopped at. It will also emit all previous events again so your scene can be rebuilt.
 	 */
 	public function suspend( ctx: CONTEXT ) {
+		if (savedKey != null) {
+			ctx.currentKey = savedKey;
+		}
+
 		ctx.node_status.clear();
 		ctx.indices.clear();
 
@@ -82,7 +96,7 @@ class Tree<NODE, CONTEXT: Context> {
 	}
 
 	/**
-	 * Clears the whole context to basically reset the progress.
+	 * Clears the whole context to reset the whole progress.
 	 */
 	public function clear( ctx: CONTEXT ) {
 		ctx.currentKey = null;
@@ -221,11 +235,6 @@ class Tree<NODE, CONTEXT: Context> {
 				log('/selector($nodeKey) => Failure');
 				return update_node_status(ctx, nodeKey, Failure);
 
-			// case Chance(probability):
-			// 	final r: StoryStatus = Math.random() <= probability ? Success : Failure;
-			// 	log(':CHANCE($nodeKey) probability=$probability $r');
-			// 	return r;
-
 			case Goto(key):
 				log('goto($nodeKey) key=$key');
 				final next = nodes.exists(key);
@@ -259,6 +268,11 @@ class Tree<NODE, CONTEXT: Context> {
 				return r;
 
 			case Narrate(text, format):
+				if (saveNextKey) {
+					saveNextKey = false;
+					savedKey = ctx.currentKey;
+				}
+
 				narrate_event.text = text;
 				narrate_event.format = format;
 				dispatch(narrate_event);
@@ -278,17 +292,17 @@ class Tree<NODE, CONTEXT: Context> {
 				final selected = entry.selection.get(entry.run);
 
 				if (selected == -1) {
-					log('multiple_choice($nodeKey) key=$key');
+					log('choice($nodeKey) key=$key');
 					final last = get_node_index(ctx, nodeKey);
 					var itemIndex = 0;
 
-					present_multiple_choice_event.key = key;
-					present_multiple_choice_event.items = [];
+					present_choice_event.key = key;
+					present_choice_event.items = [];
 
 					for (i in last...choices.length) {
 						final c = choices[i];
 
-						present_multiple_choice_event.items[itemIndex] = {
+						present_choice_event.items[itemIndex] = {
 							text: c.line,
 							format: c.format,
 							index: i,
@@ -297,12 +311,11 @@ class Tree<NODE, CONTEXT: Context> {
 						itemIndex += 1;
 					}
 
-					dispatch(present_multiple_choice_event);
-					log('multiple_choice($nodeKey) key=$key => Running');
+					dispatch(present_choice_event);
+					log('choice($nodeKey) key=$key => Running');
 					return Running;
 				} else {
 					final run = entry.run;
-					// final answer = entry.selection.get(run);
 					entry.run += 1;
 
 					final r = _eval(Selector([

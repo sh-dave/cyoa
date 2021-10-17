@@ -20,17 +20,17 @@ class NarrationEvent extends Event {
 }
 
 @:structInit
-class MultipleChoiceItem {
+class ChoiceItem {
 	public var index: Int;
 	public var text: String;
 	public var format: Null<String>;
 }
 
-class MultipleChoiceEvent extends Event {
-	public static inline final Id = 'multiple-choice-event';
+class ChoiceEvent extends Event {
+	public static inline final Id = 'choice-event';
 
 	public var key: String;
-	public var items: Array<MultipleChoiceItem> = [];
+	public var items: Array<ChoiceItem> = [];
 
 	public function new() {
 		super(Id);
