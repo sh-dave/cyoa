@@ -6,17 +6,16 @@ import cyoa.Events;
 
 enum SuspendMode {
 	EveryNode;
-	FirstNarrationAfterChoice;
+	FirstNodeAfterChoice;
 }
 
 class Tree<NODE, CONTEXT: Context> {
 	var nodes: Map<String, Node<NODE>>;
 	var current: Node<NODE>;
 	var nextRootKey: Option<String> = None;
-	var savedKey: String;
 
-	final suspendMode: SuspendMode;
-	var saveNextKey = false;
+	final suspend_mode: SuspendMode;
+	var save_next_key = false;
 
 	final listeners: Array<Event -> Void> = [];
 	final narrate_event = new NarrationEvent();
@@ -25,17 +24,17 @@ class Tree<NODE, CONTEXT: Context> {
 	final logFn: String -> Void;
 	var _indent = 0;
 
-	public function new( logFn, suspendMode: SuspendMode ) {
+	public function new( logFn, suspend_mode: SuspendMode ) {
 		this.logFn = logFn;
-		this.suspendMode = suspendMode;
+		this.suspend_mode = suspend_mode;
 	}
 
 	/**
-	 * Inject the node tree. It will jump to the node `ctx.rootKey`.
+	 * Inject the node tree. It will start at `ctx.saved_key` if a story is in progress or `ctx.root_key` otherwise.
 	 */
 	public function init( ctx: CONTEXT, nodes ) {
 		this.nodes = nodes;
-		this.current = nodes.get(savedKey = ctx.currentKey = ctx.rootKey);
+		this.current = nodes.get(ctx.current_key = ctx.saved_key != null ? ctx.saved_key : ctx.root_key);
 		this.nextRootKey = None;
 	}
 
@@ -43,7 +42,7 @@ class Tree<NODE, CONTEXT: Context> {
 	 * Run the logic.
 	 */
 	public function process( ctx: CONTEXT ) : NodeStatus {
-		final r = eval(current, ctx, ctx.currentKey);
+		final r = eval(current, ctx, ctx.current_key);
 
 		switch nextRootKey {
 			case None:
@@ -51,8 +50,20 @@ class Tree<NODE, CONTEXT: Context> {
 
 			case Some(key):
 				final next = nodes.get(key);
-				ctx.currentKey = key;
+				ctx.current_key = key;
 				current = next;
+
+				switch suspend_mode {
+					case EveryNode:
+						ctx.saved_key = key;
+
+					case FirstNodeAfterChoice:
+						if (save_next_key) {
+							save_next_key = false;
+							ctx.saved_key = key;
+						}
+				}
+
 				nextRootKey = None;
 				ctx.indices.clear();
 				ctx.node_status.clear();
@@ -67,7 +78,13 @@ class Tree<NODE, CONTEXT: Context> {
 		final entry = ctx.choice_results.get(key);
 
 		if (entry != null) {
-			saveNextKey = true;
+			switch suspend_mode {
+				case EveryNode:
+
+				case FirstNodeAfterChoice:
+					save_next_key = true;
+			}
+
 			entry.selection.set(entry.run, answer);
 			return Success;
 		} else {
@@ -79,27 +96,24 @@ class Tree<NODE, CONTEXT: Context> {
 	/**
 	 * Suspends the story for serialization.
 	 *
-	 * You should new serialize the whole `ctx` object.
+	 * You should serialize the whole `ctx` object.
 	 * To resume the story, deserialize the `ctx` object and just call `process()`.
 	 */
 	public function suspend( ctx: CONTEXT ) {
-		if (savedKey != null) {
-			ctx.currentKey = savedKey;
-		}
+		// ctx.node_status.clear();
+		// ctx.indices.clear();
 
-		ctx.node_status.clear();
-		ctx.indices.clear();
-
-		for (r in ctx.choice_results) {
-			r.run = 0;
-		}
+		// for (r in ctx.choice_results) {
+		// 	r.run = 0;
+		// }
 	}
 
 	/**
 	 * Clears the whole context to reset the whole progress.
 	 */
 	public function clear( ctx: CONTEXT ) {
-		ctx.currentKey = null;
+		ctx.current_key = null;
+		ctx.saved_key = null;
 		ctx.state.clear();
 		ctx.choice_results.clear();
 		ctx.indices.clear();
@@ -268,9 +282,9 @@ class Tree<NODE, CONTEXT: Context> {
 				return r;
 
 			case Narrate(text, format):
-				if (saveNextKey) {
-					saveNextKey = false;
-					savedKey = ctx.currentKey;
+				if (save_next_key) {
+					save_next_key = false;
+					ctx.saved_key = ctx.current_key;
 				}
 
 				narrate_event.text = text;
